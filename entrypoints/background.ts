@@ -1,4 +1,4 @@
-import { MAL_AUTH_URL, MAL_TOKEN_URL, MAL_CLIENT_ID } from '../utils/config';
+import { MAL_AUTH_URL, MAL_TOKEN_URL, MAL_CLIENT_ID, MAL_CLIENT_SECRET } from '../utils/config';
 import { malToken, malRefresh, codeVerifier } from '../utils/storage';
 import { generateVerifier } from '../utils/oauth';
 import { getMALUser, checkUserList, addToList, updateEpisode, completeAnime } from '../utils/mal-api';
@@ -32,6 +32,7 @@ async function doOAuth(): Promise<{ success: boolean; error?: string }> {
     const storedVerifier = await codeVerifier.getValue();
     const body = new URLSearchParams({
       client_id: MAL_CLIENT_ID,
+      client_secret: MAL_CLIENT_SECRET,
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUrl,
@@ -71,6 +72,7 @@ async function doRefresh(): Promise<{ success: boolean; error?: string }> {
       grant_type: 'refresh_token',
       refresh_token: refresh,
       client_id: MAL_CLIENT_ID,
+      client_secret: MAL_CLIENT_SECRET,
     });
 
     const res = await fetch(MAL_TOKEN_URL, {
