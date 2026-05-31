@@ -183,6 +183,33 @@
 .about-row span { color: var(--rose-sub); font-weight: 600; }
 .about-row b { color: var(--rose-dark); font-weight: 800; }
 
+.lang-switch {
+  display: flex;
+  gap: 4px;
+}
+
+.lang-opt {
+  min-width: 34px;
+  padding: 4px 9px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--rose-sub);
+  background: var(--pink-50);
+  border: 1.5px solid var(--pink-200);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.lang-opt:hover { color: var(--pink-600); border-color: var(--pink-300); }
+
+.lang-opt.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink-400), var(--pink-600));
+  border-color: transparent;
+}
+
 .btn-bug {
   display: inline-flex;
   align-items: center;

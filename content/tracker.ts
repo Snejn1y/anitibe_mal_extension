@@ -1,6 +1,7 @@
 import { getCachedAnime, setCachedAnime, type CachedAnime } from '~/utils/cache';
 import { getTitle, getActiveEpisode, getAnimeYear, getPlaylistItem, triggerOrgNameLoad, getOrgTitle } from '~/content/parser';
 import { panel } from '~/content/overlay';
+import { tr } from '~/utils/i18n';
 import type { JikanAnime } from '~/utils/jikan';
 
 const send = (msg: any) => browser.runtime.sendMessage(msg);
@@ -39,7 +40,7 @@ export class Tracker {
       const title = orgTitle || getTitle();
       const year = getAnimeYear();
       console.log('[CS] Identifying:', title, year);
-      panel.showLoading('Шукаю аніме на MyAnimeList…');
+      panel.showLoading(tr().loadingSearch);
 
       send({ action: 'identifyAnime', title, year })
         .then((res: any) => {
@@ -154,7 +155,7 @@ export class Tracker {
     if (!this.anime) return;
     const addRes = await send({ action: 'addToList', malId: this.anime.malId });
     if (!addRes?.success) {
-      panel.showError('Не вдалося додати до списку. Спробуй ще раз.');
+      panel.showError(tr().errAddList);
       return;
     }
     this.inWatchingList = true;
@@ -236,7 +237,7 @@ export class Tracker {
     if (!this.anime) return;
     const updateRes = await send({ action: 'updateEpisode', malId: this.anime.malId, episode: episodeToMark });
     if (!updateRes?.success) {
-      panel.showError(`Не вдалося записати серію ${episodeToMark}.`);
+      panel.showError(tr().errWriteEp(episodeToMark));
       return;
     }
     console.log('[CS] Marked episode', episodeToMark, 'on MAL');
@@ -263,7 +264,7 @@ export class Tracker {
           const target = watched + 1;
           const item = getPlaylistItem(target);
           if (!item) {
-            panel.showError(`Серію ${target} не знайдено у плейлисті.`);
+            panel.showError(tr().errEpNotFound(target));
             return;
           }
           // Treat the resumed click as a fresh baseline (no MAL write on landing).
@@ -273,7 +274,7 @@ export class Tracker {
         onUpdate: async () => {
           const updateRes = await send({ action: 'updateEpisode', malId: this.anime!.malId, episode: current });
           if (!updateRes?.success) {
-            panel.showError(`Не вдалося оновити до серії ${current}.`);
+            panel.showError(tr().errUpdateTo(current));
             return;
           }
           if (total > 0 && current >= total) this.promptRating();
@@ -291,7 +292,7 @@ export class Tracker {
       onRate: async (score) => {
         const res = await send({ action: 'completeAnime', malId: this.anime!.malId, score });
         if (!res?.success) {
-          panel.showError('Не вдалося зберегти. Спробуй ще раз.');
+          panel.showError(tr().errSave);
           return;
         }
         console.log('[CS] Anime completed, score', score);
