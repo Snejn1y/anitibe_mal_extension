@@ -91,9 +91,6 @@ Register an app at [MAL API](https://myanimelist.net/apiconfig) and set
 must match what `chrome.identity.getRedirectURL('provider_cb')` returns for your build.
 Auth uses OAuth2 + PKCE (MAL requires the client secret for the token exchange).
 
-> ⚠️ A bundled extension cannot truly hide secrets — the built artifact contains these
-> keys. `.env` only keeps them out of the public repository.
-
 ## Permissions & privacy
 
 - `storage` — keeps your MAL token and settings (language).
