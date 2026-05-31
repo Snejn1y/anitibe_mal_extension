@@ -1,59 +1,68 @@
 # AniTube → MyAnimeList Sync
 
-Браузерне розширення (Chrome/Firefox, Manifest V3), що автоматично відстежує
-переглянуті серії аніме на [anitube.in.ua](https://anitube.in.ua) і синхронізує
-прогрес із вашим списком на [MyAnimeList](https://myanimelist.net).
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
+![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Firefox-orange)
+![Built with WXT](https://img.shields.io/badge/built%20with-WXT%20%2B%20React-de3163)
 
-## Можливості
+🇬🇧 English · [🇺🇦 Українська](README.uk.md)
 
-- Автоматично визначає аніме зі сторінки anitube (з ручним пошуком на випадок промаху)
-- Послідовний перегляд (серія N → N+1) одразу пише прогрес на MAL
-- При стрибку через серії питає, з якої серії продовжити або яку зафіксувати
-- Пропонує оцінити аніме після фінальної серії
-- Постійна панель із прогресом, студією, жанрами та оцінкою; згортається в кнопку
+Browser extension (Chrome/Firefox, Manifest V3) that automatically tracks watched
+anime episodes on [anitube.in.ua](https://anitube.in.ua) and syncs your progress to
+[MyAnimeList](https://myanimelist.net).
 
-## Стек
+## Features
 
-[WXT](https://wxt.dev) + React + TypeScript. Логіка OAuth/API живе у фоновому
-service worker; контент-скрипт лише читає сторінку та малює UI.
+- Auto-detects the anime from the anitube page (with manual search as a fallback)
+- Sequential watching (episode N → N+1) writes progress to MAL instantly
+- When you jump across episodes, it asks where to continue or which episode to set
+- Offers to rate the anime after the final episode
+- Persistent panel with progress, studio, genres and score; collapses into a button
+- UA / EN interface with an in-extension language switch
 
-## Розробка
+## Screenshots
+
+| Status panel | Episode choice | Popup |
+|---|---|---|
+| ![Status panel](docs/screenshots/panel-status.png) | ![Episode choice](docs/screenshots/panel-choice.png) | ![Popup](docs/screenshots/popup.png) |
+
+## Tech
+
+[WXT](https://wxt.dev) + React + TypeScript. OAuth/API logic lives in the background
+service worker; the content script only reads the page and renders the UI.
+
+## Development
 
 ```bash
 npm install
-npm run dev          # Chrome з HMR
-npm run dev:firefox  # Firefox
-npm run build        # продакшн-збірка (Chrome)
+cp .env.example .env   # fill in your MAL app credentials (see below)
+npm run dev            # Chrome with HMR
+npm run dev:firefox    # Firefox
+npm run build          # production build (Chrome)
 npm run build:firefox
-npm test             # юніт-тести (Vitest)
-npm run compile      # перевірка типів
+npm test               # unit tests (Vitest)
+npm run compile        # type-check
 ```
 
-Зібране розширення зʼявиться в `.output/chrome-mv3/` — завантажте його через
-`chrome://extensions` → «Завантажити розпакований».
+The built extension lands in `.output/chrome-mv3/` — load it via
+`chrome://extensions` → "Load unpacked".
 
-### Свій MAL-застосунок
+### MAL application
 
-Ключі MAL не зберігаються в репозиторії — вони беруться з `.env` під час збірки.
-Щоб зібрати локально:
+MAL credentials are **not** committed — they are injected at build time from `.env`.
+Register an app at [MAL API](https://myanimelist.net/apiconfig) and set
+`WXT_MAL_CLIENT_ID` and `WXT_MAL_CLIENT_SECRET` in your `.env`. The app's redirect URI
+must match what `chrome.identity.getRedirectURL('provider_cb')` returns for your build.
+Auth uses OAuth2 + PKCE (MAL requires the client secret for the token exchange).
 
-```bash
-cp .env.example .env   # і впишіть свої значення
-```
+> ⚠️ A bundled extension cannot truly hide secrets — the built artifact contains these
+> keys. `.env` only keeps them out of the public repository.
 
-Зареєструйте застосунок на [MAL API](https://myanimelist.net/apiconfig) і додайте
-`WXT_MAL_CLIENT_ID` та `WXT_MAL_CLIENT_SECRET` у `.env`. Redirect URI застосунку має
-збігатися з тим, що повертає `chrome.identity.getRedirectURL('provider_cb')` для вашої
-збірки. Авторизація — OAuth2 + PKCE (MAL вимагає client secret для обміну токена).
+## Reporting bugs
 
-> ⚠️ Зібране розширення містить ці ключі у бандлі — приховати секрет у браузерному
-> розширенні неможливо. `.env` лише тримає його поза публічним репозиторієм.
+Open an [issue](https://github.com/Snejn1y/anitibe_mal_extension/issues/new) — there is
+also a button for it inside the extension (the "About" tab).
 
-## Повідомити про баг
-
-Створіть [issue](https://github.com/Snejn1y/anitibe_mal_extension/issues/new) — кнопка для
-цього є й у самому розширенні (вкладка «Про розширення»).
-
-## Ліцензія
+## License
 
 [MIT](LICENSE)
