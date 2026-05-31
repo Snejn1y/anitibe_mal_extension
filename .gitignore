@@ -1,0 +1,45 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.output
+stats.html
+stats-*.json
+.wxt
+web-ext.config.ts
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# Secrets / local env (committed: .env.example only)
+.env
+.env.local
+.env.*.local
+
+# AI assistant / dev-tooling artifacts — never publish these
+.claude/
+CLAUDE.md
+.windsurf/
+.cursor/
+.github/copilot-instructions.md
+.playwright-mcp/
+docs/superpowers/
+
+# Local manual/e2e test artifacts
+test_images/
+tests/ui-browser-test.mjs
