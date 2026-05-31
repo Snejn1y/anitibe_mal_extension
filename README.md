@@ -34,7 +34,7 @@ itself up to date.
 
 | Status panel | Episode choice | Popup |
 |---|---|---|
-| ![Status panel](docs/screenshots/panel-status.png) | ![Episode choice](docs/screenshots/panel-choice.png) | ![Popup](docs/screenshots/popup.png) |
+| ![Status panel](docs/screenshots/panel-status_en.png) | ![Episode choice](docs/screenshots/panel-choice_en.png) | ![Popup](docs/screenshots/popup_en.png) |
 
 ## How it works
 
