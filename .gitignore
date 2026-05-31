@@ -43,3 +43,6 @@ docs/superpowers/
 # Local manual/e2e test artifacts
 test_images/
 tests/ui-browser-test.mjs
+
+# Generated store/marketing assets (uploaded to the Web Store, not part of the build)
+store-assets/
