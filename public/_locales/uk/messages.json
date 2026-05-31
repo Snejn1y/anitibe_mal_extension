@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "AniTube → MyAnimeList Sync",
+    "description": "Extension name shown in the store and chrome://extensions"
+  },
+  "extDescription": {
+    "message": "Автоматично відстежує переглянуті аніме на anitube.in.ua та синхронізує прогрес у MyAnimeList.",
+    "description": "Extension description (store summary)"
+  }
+}

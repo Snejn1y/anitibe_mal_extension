@@ -4,8 +4,9 @@ import pkg from './package.json';
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
-    name: 'AniTube → MyAnimeList Sync',
-    description: 'Автоматично відстежує аніме на anitube.in.ua та синхронізує прогрес у MyAnimeList',
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
+    default_locale: 'en',
     version: pkg.version,
     permissions: ['storage', 'identity'],
     host_permissions: [
