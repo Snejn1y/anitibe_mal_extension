@@ -1,4 +1,5 @@
 import type { JikanAnime } from '~/utils/jikan';
+import { tr } from '~/utils/i18n';
 
 /**
  * A single persistent panel pinned to the top-right of the page.
@@ -156,7 +157,7 @@ function animeRow(opts: RowMeta): HTMLElement {
     poster.classList.add('ov-anime-poster-zoomable');
     poster.tabIndex = 0;
     poster.setAttribute('role', 'button');
-    poster.setAttribute('aria-label', 'Збільшити постер');
+    poster.setAttribute('aria-label', tr().enlargePoster);
     poster.addEventListener('mouseenter', () => openPosterZoom(url, poster));
     poster.addEventListener('mouseleave', () => closePosterZoom());
     poster.addEventListener('focus', () => openPosterZoom(url, poster));
@@ -191,7 +192,7 @@ function animeRow(opts: RowMeta): HTMLElement {
   // Studio line
   if (opts.studios?.length) {
     const studio = el('div', 'ov-anime-detail');
-    studio.append(el('span', 'ov-detail-label', 'Студія: '), document.createTextNode(opts.studios.join(', ')));
+    studio.append(el('span', 'ov-detail-label', tr().studioLabel), document.createTextNode(opts.studios.join(', ')));
     info.appendChild(studio);
   }
 
@@ -213,7 +214,7 @@ function progress(watched: number, total: number): HTMLElement {
   const wrap = el('div', 'ov-progress-wrap');
 
   const line = el('div', 'ov-status-line');
-  line.textContent = total > 0 ? `Прогрес: ${watched} / ${total}` : `Прогрес: ${watched} серій`;
+  line.textContent = tr().progress(watched, total);
   wrap.appendChild(line);
 
   if (total > 0) {
@@ -230,6 +231,13 @@ function progress(watched: number, total: number): HTMLElement {
 
 class Panel {
   private collapsed = false;
+  /** Re-invokes the current state with fresh translations (used on language change). */
+  private lastRender: (() => void) | null = null;
+
+  /** Re-render the current panel state (e.g. after the UI language changes). */
+  refresh(): void {
+    this.lastRender?.();
+  }
 
   /**
    * Play a one-shot animation class: (re)start it from scratch and clean it up
@@ -260,7 +268,7 @@ class Panel {
 
       const actions = el('div', 'ov-header-actions');
       const collapseBtn = el('button', 'ov-icon-btn', '–');
-      collapseBtn.setAttribute('aria-label', 'Згорнути');
+      collapseBtn.setAttribute('aria-label', tr().collapseAria);
       collapseBtn.onclick = () => this.collapse();
       actions.appendChild(collapseBtn);
       header.appendChild(actions);
@@ -297,7 +305,7 @@ class Panel {
   private buildFab(): HTMLButtonElement {
     const fab = el('button', 'ov-collapsed');
     fab.id = FAB_ID;
-    fab.setAttribute('aria-label', 'Розгорнути AniTube Sync');
+    fab.setAttribute('aria-label', tr().expandAria);
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -357,13 +365,14 @@ class Panel {
   }
 
   showIdentify(anime: JikanAnime, cb: { onConfirm: () => void; onReject: () => void }): void {
+    this.lastRender = () => this.showIdentify(anime, cb);
     const row = animeRow(anime);
-    const text = el('p', 'ov-text', 'Це правильне аніме?');
+    const text = el('p', 'ov-text', tr().confirmAnime);
 
     const actions = el('div', 'ov-actions');
     actions.append(
-      button('Так, це воно', 'primary', cb.onConfirm),
-      button('Не те', 'secondary', cb.onReject),
+      button(tr().yes, 'primary', cb.onConfirm),
+      button(tr().notIt, 'secondary', cb.onReject),
     );
     this.render([row, text, actions]);
   }
@@ -375,27 +384,28 @@ class Panel {
       onSelect: (anime: JikanAnime) => void;
     },
   ): void {
+    this.lastRender = () => this.showManualSearch(initialQuery, cb);
     const input = el('input', 'ov-search-input');
     input.type = 'text';
-    input.placeholder = 'Назва аніме...';
+    input.placeholder = tr().searchPlaceholder;
     input.value = initialQuery;
 
     const results = el('div', 'ov-search-results');
-    const searchBtn = button('Знайти', 'primary', () => doSearch());
+    const searchBtn = button(tr().searchBtn, 'primary', () => doSearch());
 
     const doSearch = async () => {
       const q = input.value.trim();
       if (!q) return;
       searchBtn.disabled = true;
-      setBtnLabel(searchBtn, 'Шукаємо...');
+      setBtnLabel(searchBtn, tr().searching);
       results.replaceChildren(el('div', 'ov-spinner'));
 
       const list = await cb.onSearch(q);
       searchBtn.disabled = false;
-      setBtnLabel(searchBtn, 'Знайти');
+      setBtnLabel(searchBtn, tr().searchBtn);
 
       if (!list.length) {
-        results.replaceChildren(el('div', 'ov-no-results', 'Нічого не знайдено'));
+        results.replaceChildren(el('div', 'ov-no-results', tr().noResults));
         return;
       }
 
@@ -419,7 +429,7 @@ class Panel {
 
     input.addEventListener('keydown', (e: KeyboardEvent) => { if (e.key === 'Enter') doSearch(); });
 
-    const header = el('p', 'ov-text', 'Пошук аніме на MyAnimeList:');
+    const header = el('p', 'ov-text', tr().searchHeader);
     const actions = el('div', 'ov-actions');
     actions.appendChild(searchBtn);
 
@@ -431,16 +441,17 @@ class Panel {
     opts: RowMeta,
     cb: { onAdd: () => void; onIgnore: () => void },
   ): void {
+    this.lastRender = () => this.showNotInList(opts, cb);
     const row = animeRow(opts);
-    const text = el('p', 'ov-text', `"${opts.title}" не у списку Watching. Почати відстежувати?`);
+    const text = el('p', 'ov-text', tr().notInList(opts.title));
 
-    const addBtn = button('Почати відстежувати', 'primary', () => {
+    const addBtn = button(tr().startTracking, 'primary', () => {
       addBtn.disabled = true;
-      setBtnLabel(addBtn, 'Додаємо...');
+      setBtnLabel(addBtn, tr().adding);
       cb.onAdd();
     });
     const actions = el('div', 'ov-actions');
-    actions.append(addBtn, button('Не потрібно', 'secondary', cb.onIgnore));
+    actions.append(addBtn, button(tr().notNeeded, 'secondary', cb.onIgnore));
 
     this.render([row, text, actions]);
   }
@@ -449,6 +460,7 @@ class Panel {
     opts: RowMeta & { watched: number; total: number },
     cb?: { onComplete?: () => void },
   ): void {
+    this.lastRender = () => this.showStatus(opts, cb);
     const row = animeRow(opts);
     const prog = progress(opts.watched, opts.total);
 
@@ -457,7 +469,7 @@ class Panel {
     const finished = opts.total > 0 && opts.watched >= opts.total;
     if (finished && cb?.onComplete) {
       const actions = el('div', 'ov-actions');
-      actions.appendChild(button('Завершити перегляд', 'primary', cb.onComplete, iconFlag));
+      actions.appendChild(button(tr().completeWatching, 'primary', cb.onComplete, iconFlag));
       nodes.push(actions);
     }
 
@@ -469,10 +481,11 @@ class Panel {
     opts: RowMeta & { watched: number; total: number; current: number },
     cb: { onResume: () => void; onUpdate: () => void },
   ): void {
+    this.lastRender = () => this.showNonSequential(opts, cb);
     const row = animeRow(opts);
     const prog = progress(opts.watched, opts.total);
 
-    const text = el('p', 'ov-text', `Обрана серія ${opts.current} — не наступна по порядку.`);
+    const text = el('p', 'ov-text', tr().nonSeqText(opts.current));
 
     const actions = el('div', 'ov-actions ov-col');
 
@@ -480,12 +493,12 @@ class Panel {
     const hasNext = opts.total === 0 || nextEp <= opts.total;
     if (hasNext) {
       actions.appendChild(
-        button(`Продовжити з серії ${nextEp}`, 'primary', cb.onResume, iconPlay),
+        button(tr().resumeFrom(nextEp), 'primary', cb.onResume, iconPlay),
       );
     }
-    const updateBtn = button(`Оновити до серії ${opts.current}`, 'secondary', () => {
+    const updateBtn = button(tr().updateToEp(opts.current), 'secondary', () => {
       updateBtn.disabled = true;
-      setBtnLabel(updateBtn, 'Оновлюємо...');
+      setBtnLabel(updateBtn, tr().updating);
       cb.onUpdate();
     }, iconCheck);
     actions.appendChild(updateBtn);
@@ -497,8 +510,9 @@ class Panel {
     opts: RowMeta,
     cb: { onRate: (score: number) => void },
   ): void {
+    this.lastRender = () => this.showRating(opts, cb);
     const row = animeRow(opts);
-    const text = el('p', 'ov-text', `Перегляд завершено! Оціни "${opts.title}":`);
+    const text = el('p', 'ov-text', tr().ratingText(opts.title));
 
     let selected = 0;
     const rating = el('div', 'ov-rating');
@@ -517,12 +531,12 @@ class Panel {
     }
 
     const actions = el('div', 'ov-actions');
-    const completeBtn = button('Завершити', 'primary', () => {
+    const completeBtn = button(tr().finish, 'primary', () => {
       completeBtn.disabled = true;
-      setBtnLabel(completeBtn, 'Зберігаємо...');
+      setBtnLabel(completeBtn, tr().saving);
       cb.onRate(selected);
     });
-    actions.append(completeBtn, button('Без оцінки', 'secondary', () => {
+    actions.append(completeBtn, button(tr().noScore, 'secondary', () => {
       completeBtn.disabled = true;
       cb.onRate(0);
     }));

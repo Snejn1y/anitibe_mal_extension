@@ -2,6 +2,8 @@ import '../content/overlay.css';
 import { isAnimePage, getActiveEpisode } from '../content/parser';
 import { watchPlaylist } from '../content/watcher';
 import { Tracker } from '../content/tracker';
+import { panel } from '../content/overlay';
+import { initLang, setCurrentLang } from '../utils/i18n';
 
 export default defineContentScript({
   matches: ['*://anitube.in.ua/*'],
@@ -20,6 +22,19 @@ export default defineContentScript({
       console.log('[CS] Not logged in — tracking disabled');
       return;
     }
+
+    await initLang();
+
+    // Re-render the panel live when the language is changed from the popup.
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'sync' && changes.lang) {
+        const v = changes.lang.newValue;
+        if (v === 'uk' || v === 'en') {
+          setCurrentLang(v);
+          panel.refresh();
+        }
+      }
+    });
 
     const tracker = new Tracker();
     tracker.start();
