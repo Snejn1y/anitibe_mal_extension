@@ -1,0 +1,511 @@
+/* ══════════════════════════════════════════
+   AniTube x MAL Sync — In-page overlays
+   ══════════════════════════════════════════ */
+
+:root {
+  --ov-bg:      rgba(253, 240, 245, 0.95);
+  --ov-border:  rgba(244, 176, 200, 0.4);
+  --ov-pink:    #e8547e;
+  --ov-pink-d:  #c73f64;
+  --ov-pink-l:  #fce8ef;
+  --ov-rose:    #3d1a2e;
+  --ov-sub:     #8c5f72;
+  --ov-shadow:  0 12px 40px rgba(180, 80, 110, 0.2), 0 2px 8px rgba(0,0,0,0.08);
+  --ov-radius:  16px;
+  --ov-font:    'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.ov-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: var(--ov-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius);
+  box-shadow: var(--ov-shadow);
+  font-family: var(--ov-font);
+  font-size: 14px;
+  color: var(--ov-rose);
+  z-index: 2147483647;
+  overflow: hidden;
+  /* Pivot every entry/exit on the corner the collapsed button sits in, so the
+     panel visually grows out of / shrinks into that button. */
+  transform-origin: top right;
+}
+
+/* Panel folds out of / into the top-right corner where the collapsed button sits.
+   The exit shrinks the panel well down toward that corner while the button grows
+   up from it, so the two read as one continuous fold. */
+/* The 0.1s in-delay lets the button start shrinking first, so the panel grows in
+   as the button leaves (a hand-off rather than two things moving at once). */
+.ov-popup.ov-in  { animation: ovIn  0.3s cubic-bezier(0.34, 1.45, 0.64, 1) 0.1s both; }
+.ov-popup.ov-out { animation: ovOut 0.24s cubic-bezier(0.4, 0.0, 0.6, 1) both; }
+
+@keyframes ovIn  { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes ovOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.35); } }
+
+.ov-collapsed {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f47096, var(--ov-pink-d));
+  box-shadow: 0 4px 16px rgba(199, 63, 100, 0.4);
+  cursor: pointer;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transform-origin: top right;
+  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.18s ease;
+}
+
+/* Button grows out of / shrinks into the same corner, mirroring the panel so the
+   two cross-fade as a single fold. Start scale matches the panel's exit scale. */
+/* The 0.12s in-delay lets the panel fold into the corner first, then the button
+   emerges from it. */
+.ov-collapsed.ov-fab-in  { animation: ovFabIn  0.3s cubic-bezier(0.34, 1.5, 0.64, 1) 0.12s both; }
+.ov-collapsed.ov-fab-out { animation: ovFabOut 0.18s cubic-bezier(0.4, 0.0, 0.6, 1) both; }
+
+.ov-collapsed:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 22px rgba(199, 63, 100, 0.55);
+}
+
+@keyframes ovFabIn  { from { opacity: 0; transform: scale(0.35); } to { opacity: 1; transform: scale(1); } }
+@keyframes ovFabOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.35); } }
+
+.ov-collapsed svg {
+  width: 22px;
+  height: 22px;
+  fill: white;
+}
+
+.ov-header {
+  background: linear-gradient(135deg, #f47096 0%, var(--ov-pink-d) 100%);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.ov-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.ov-icon-btn {
+  width: 24px;
+  height: 24px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.ov-icon-btn:hover { background: rgba(255,255,255,0.32); }
+
+.ov-body {
+  padding: 13px 14px 14px;
+}
+
+/* Gentle cross-fade when the panel swaps to a new state. */
+.ov-body.ov-swap { animation: ovSwap 0.2s ease both; }
+@keyframes ovSwap {
+  from { opacity: 0.35; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ov-anime-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ov-anime-poster {
+  width: 48px;
+  height: 68px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--ov-pink-l);
+  border: 1px solid var(--ov-border);
+  flex-shrink: 0;
+}
+
+.ov-anime-poster-zoomable {
+  cursor: zoom-in;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ov-anime-poster-zoomable:hover,
+.ov-anime-poster-zoomable:focus-visible {
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px rgba(199, 63, 100, 0.4);
+  outline: none;
+}
+
+/* Magnified poster preview (rendered on <body>, beside the panel) */
+.ov-poster-zoom {
+  position: fixed;
+  width: 200px;
+  height: auto;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 16px 44px rgba(180, 80, 110, 0.4), 0 4px 12px rgba(0, 0, 0, 0.22);
+  background: var(--ov-pink-l);
+  z-index: 2147483647;
+  pointer-events: none;
+  transform-origin: right center;
+  animation: ovZoomIn 0.18s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.ov-poster-zoom.ov-poster-zoom-hide {
+  animation: ovZoomOut 0.12s ease-in both;
+}
+
+@keyframes ovZoomIn  { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes ovZoomOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.7); } }
+
+.ov-anime-info { flex: 1; min-width: 0; }
+
+.ov-anime-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ov-rose);
+  line-height: 1.3;
+  margin-bottom: 6px;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ov-anime-meta {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ov-anime-meta span {
+  font-size: 11px;
+  background: var(--ov-pink-l);
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid var(--ov-border);
+  font-weight: 700;
+  color: var(--ov-sub);
+}
+
+.ov-anime-meta span.ov-badge-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff7e0;
+  border-color: #f4d98a;
+  color: #b07d12;
+}
+
+.ov-anime-meta span.ov-badge-score .ov-ic {
+  width: 11px;
+  height: 11px;
+  color: #f0b429;
+}
+
+.ov-anime-detail {
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ov-rose);
+  line-height: 1.35;
+}
+
+.ov-detail-label {
+  color: var(--ov-sub);
+  font-weight: 700;
+}
+
+.ov-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.ov-genre {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ov-pink-d);
+  background: #ffeaf1;
+  border: 1px solid var(--ov-border);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.ov-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ov-sub);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.ov-progress-wrap {
+  margin-bottom: 12px;
+}
+
+.ov-status-line {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ov-rose);
+  margin-bottom: 7px;
+}
+
+.ov-progress {
+  width: 100%;
+  height: 7px;
+  background: var(--ov-pink-l);
+  border: 1px solid var(--ov-border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.ov-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f47096, var(--ov-pink-d));
+  border-radius: 20px;
+  transition: width 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.ov-error {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0392b;
+  background: #fff0f0;
+  border: 1px solid #ffb3b3;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.ov-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.ov-actions.ov-col {
+  flex-direction: column;
+}
+
+.ov-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--ov-font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.ov-ic {
+  flex-shrink: 0;
+  display: block;
+}
+
+.ov-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.ov-btn:active { transform: translateY(0); }
+.ov-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.ov-btn-primary {
+  background: linear-gradient(135deg, #f47096, var(--ov-pink-d));
+  color: white;
+  box-shadow: 0 3px 12px rgba(199,63,100,0.3);
+}
+
+.ov-btn-secondary {
+  background: var(--ov-pink-l);
+  color: var(--ov-sub);
+  border: 1.5px solid var(--ov-border);
+}
+
+.ov-btn-secondary:hover { background: #ffd6e7; }
+
+.ov-btn-ghost {
+  background: transparent;
+  color: var(--ov-sub);
+  border: 1.5px solid var(--ov-border);
+}
+
+.ov-search-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--ov-border);
+  border-radius: 9px;
+  font-family: var(--ov-font);
+  font-size: 13px;
+  color: var(--ov-rose);
+  background: white;
+  outline: none;
+  margin-bottom: 8px;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.ov-search-input:focus { border-color: var(--ov-pink); }
+
+.ov-search-results {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.ov-result-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.ov-result-item:hover {
+  background: var(--ov-pink-l);
+  border-color: var(--ov-border);
+}
+
+.ov-result-img {
+  width: 30px;
+  height: 42px;
+  border-radius: 5px;
+  object-fit: cover;
+  background: var(--ov-pink-l);
+  flex-shrink: 0;
+}
+
+.ov-result-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ov-rose);
+  line-height: 1.3;
+}
+
+.ov-result-year {
+  font-size: 11px;
+  color: var(--ov-sub);
+  margin-top: 2px;
+}
+
+.ov-no-results {
+  font-size: 12px;
+  color: var(--ov-sub);
+  text-align: center;
+  padding: 10px;
+}
+
+.ov-rating {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.ov-star {
+  cursor: pointer;
+  color: #dcdcdc;
+  transition: color 0.12s, transform 0.12s;
+  line-height: 0;
+  display: inline-flex;
+}
+
+.ov-star .ov-ic { width: 20px; height: 20px; }
+.ov-star.active { color: #f4c430; }
+.ov-star:hover { transform: scale(1.18); }
+
+.ov-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--ov-pink-l);
+  border-top-color: var(--ov-pink);
+  border-radius: 50%;
+  animation: ovSpin 0.75s linear infinite;
+  margin: 10px auto;
+}
+
+@keyframes ovSpin { to { transform: rotate(360deg); } }
+
+.ov-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: var(--ov-font);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 2147483647;
+  animation: ovToastIn 0.25s ease both;
+  max-width: 280px;
+}
+
+@keyframes ovToastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ov-toast-success {
+  background: #f0fff5;
+  border: 1px solid #a8dfc0;
+  color: #1e6940;
+}
+
+.ov-toast-error {
+  background: #fff0f0;
+  border: 1px solid #ffb3b3;
+  color: #c0392b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-popup.ov-in,
+  .ov-popup.ov-out          { animation: none; }
+  .ov-collapsed.ov-fab-in,
+  .ov-collapsed.ov-fab-out  { animation: none; }
+  .ov-body.ov-swap          { animation: none; }
+  .ov-poster-zoom,
+  .ov-poster-zoom.ov-poster-zoom-hide { animation: none; }
+  .ov-anime-poster-zoomable { transition: none; }
+  .ov-progress-bar          { transition: none; }
+  .ov-spinner               { animation: ovSpin 1.5s linear infinite; }
+  .ov-btn,
+  .ov-result-item,
+  .ov-star                  { transition: none; }
+}

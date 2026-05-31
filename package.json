@@ -1,0 +1,41 @@
+{
+  "name": "anitube-mal-sync",
+  "description": "Автоматичний трекер аніме на anitube.in.ua із синхронізацією прогресу в MyAnimeList",
+  "private": true,
+  "license": "MIT",
+  "author": "Sn1zhok",
+  "homepage": "https://github.com/Snejn1y/anitibe_mal_extension",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Snejn1y/anitibe_mal_extension.git"
+  },
+  "version": "2.0.33",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "prebuild": "npm version patch --no-git-tag-version",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@wxt-dev/module-react": "^1.1.5",
+    "happy-dom": "^20.8.9",
+    "puppeteer-core": "^25.1.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.3",
+    "wxt": "^0.20.20"
+  }
+}
