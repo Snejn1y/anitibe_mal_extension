@@ -34,11 +34,20 @@ npm run compile      # перевірка типів
 
 ### Свій MAL-застосунок
 
-Розширення авторизується через OAuth2 + PKCE, **без client secret** — у коді є лише
-публічний `MAL_CLIENT_ID`. Якщо ви форкаєте проєкт, зареєструйте власний застосунок
-на [MAL API](https://myanimelist.net/apiconfig) і вкажіть його ID в
-[`utils/config.ts`](utils/config.ts). Redirect URI має збігатися з тим, що повертає
-`chrome.identity.getRedirectURL('provider_cb')` для вашої збірки.
+Ключі MAL не зберігаються в репозиторії — вони беруться з `.env` під час збірки.
+Щоб зібрати локально:
+
+```bash
+cp .env.example .env   # і впишіть свої значення
+```
+
+Зареєструйте застосунок на [MAL API](https://myanimelist.net/apiconfig) і додайте
+`WXT_MAL_CLIENT_ID` та `WXT_MAL_CLIENT_SECRET` у `.env`. Redirect URI застосунку має
+збігатися з тим, що повертає `chrome.identity.getRedirectURL('provider_cb')` для вашої
+збірки. Авторизація — OAuth2 + PKCE (MAL вимагає client secret для обміну токена).
+
+> ⚠️ Зібране розширення містить ці ключі у бандлі — приховати секрет у браузерному
+> розширенні неможливо. `.env` лише тримає його поза публічним репозиторієм.
 
 ## Повідомити про баг
 
