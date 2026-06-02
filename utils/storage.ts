@@ -6,20 +6,20 @@ type StorageItem<T> = {
 function syncItem<T>(key: string, defaultValue: T): StorageItem<T> {
   return {
     getValue: async () => {
-      const r = await chrome.storage.sync.get(key);
+      const r = await browser.storage.sync.get(key);
       return (r[key] ?? defaultValue) as T;
     },
-    setValue: async (v) => chrome.storage.sync.set({ [key]: v }),
+    setValue: async (v) => browser.storage.sync.set({ [key]: v }),
   };
 }
 
 function sessionItem<T>(key: string, defaultValue: T): StorageItem<T> {
   return {
     getValue: async () => {
-      const r = await chrome.storage.session.get(key);
+      const r = await browser.storage.local.get(key);
       return (r[key] ?? defaultValue) as T;
     },
-    setValue: async (v) => chrome.storage.session.set({ [key]: v }),
+    setValue: async (v) => browser.storage.local.set({ [key]: v }),
   };
 }
 

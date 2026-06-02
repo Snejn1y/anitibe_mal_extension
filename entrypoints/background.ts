@@ -9,7 +9,7 @@ async function doOAuth(): Promise<{ success: boolean; error?: string }> {
     const verifier = generateVerifier();
     await codeVerifier.setValue(verifier);
 
-    const redirectUrl = chrome.identity.getRedirectURL('provider_cb');
+    const redirectUrl = browser.identity.getRedirectURL('provider_cb');
     console.log('[BG][OAuth] Redirect URL:', redirectUrl);
 
     const params = new URLSearchParams({
@@ -21,7 +21,7 @@ async function doOAuth(): Promise<{ success: boolean; error?: string }> {
     });
 
     const authUrl = `${MAL_AUTH_URL}?${params}`;
-    const resultUrl = await chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true });
+    const resultUrl = await browser.identity.launchWebAuthFlow({ url: authUrl, interactive: true });
 
     if (!resultUrl) throw new Error('Auth flow returned no URL');
 

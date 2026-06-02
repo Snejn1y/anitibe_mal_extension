@@ -14,5 +14,10 @@ export default defineConfig({
       'https://api.myanimelist.net/*',
       'https://anitube.in.ua/*',
     ],
+    browser_specific_settings: {
+      gecko: {
+        id: 'anitube-mal-sync@extension.local'
+      }
+    }
   },
 });
