@@ -20,6 +20,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirectHint, setRedirectHint] = useState<string | null>(null);
 
   useEffect(() => {
     initLang().then((l) => setLangState(l));
@@ -45,11 +46,20 @@ function App() {
   async function handleLogin() {
     setIsLoggingIn(true);
     setError(null);
+    setRedirectHint(null);
     const res = await browser.runtime.sendMessage({ action: 'login' });
     if (res?.success) {
       await checkAuth();
     } else {
-      setError(res?.error ?? tr().errGeneric);
+      // A failure during the authorize step almost always means the extension's
+      // redirect URI isn't registered in the MAL app — show a friendly message
+      // plus the exact URI to register, instead of Chrome's raw English error.
+      if (res?.phase === 'authorize') {
+        setError(tr().errAuthFailed);
+        setRedirectHint(res?.redirectUrl ?? null);
+      } else {
+        setError(res?.error ?? tr().errGeneric);
+      }
       setAuthState('logged-out');
     }
     setIsLoggingIn(false);
@@ -114,7 +124,17 @@ function App() {
                   {t.features.map((f) => <li key={f}>{f}</li>)}
                 </ul>
 
-                {error && <p className="error-msg">{error}</p>}
+                {error && (
+                  <div className="error-box">
+                    <p className="error-msg">{error}</p>
+                    {redirectHint && (
+                      <>
+                        <p className="error-hint">{t.errAuthRedirectHint}</p>
+                        <code className="error-redirect">{redirectHint}</code>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 <button className="btn-login" onClick={handleLogin} disabled={isLoggingIn}>
                   {isLoggingIn ? t.loginInProgress : t.login}
