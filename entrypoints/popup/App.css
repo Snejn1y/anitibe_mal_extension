@@ -302,14 +302,38 @@
   flex-shrink: 0;
 }
 
-.error-msg {
+.error-box {
   background: #fff0f0;
   border: 1px solid #ffc0c0;
   border-radius: 9px;
   padding: 9px 12px;
+}
+
+.error-msg {
+  margin: 0;
   font-size: 12px;
   font-weight: 600;
   color: #c0392b;
+}
+
+.error-hint {
+  margin: 7px 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #8a5a52;
+}
+
+.error-redirect {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #7a2018;
+  background: #ffe3e0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  word-break: break-all;
+  user-select: all;
 }
 
 .btn-login {

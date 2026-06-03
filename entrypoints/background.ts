@@ -4,7 +4,11 @@ import { generateVerifier } from '../utils/oauth';
 import { getMALUser, checkUserList, addToList, updateEpisode, completeAnime } from '../utils/mal-api';
 import { searchAnime, searchAnimeList } from '../utils/jikan';
 
-async function doOAuth(): Promise<{ success: boolean; error?: string }> {
+async function doOAuth(): Promise<{ success: boolean; error?: string; redirectUrl?: string; phase?: 'authorize' | 'token' }> {
+  // Computed up-front so it can be surfaced in error responses for debugging:
+  // this is the exact redirect URI that must be registered in the MAL app.
+  let phase: 'authorize' | 'token' = 'authorize';
+
   try {
     const verifier = generateVerifier();
     await codeVerifier.setValue(verifier);
@@ -25,6 +29,9 @@ async function doOAuth(): Promise<{ success: boolean; error?: string }> {
 
     if (!resultUrl) throw new Error('Auth flow returned no URL');
 
+    // We got a redirect back, so the authorize step succeeded — any failure
+    // beyond this point is in the token exchange, not a redirect_uri mismatch.
+    phase = 'token';
     const url = new URL(resultUrl);
     const code = url.searchParams.get('code');
     if (!code) throw new Error('No code in redirect URL');
@@ -58,8 +65,8 @@ async function doOAuth(): Promise<{ success: boolean; error?: string }> {
     console.log('[BG][OAuth] Login successful');
     return { success: true };
   } catch (e: any) {
-    console.error('[BG][OAuth] Error:', e.message);
-    return { success: false, error: e.message };
+    console.error('[BG][OAuth] Error:', e.message, '| phase:', phase, '| redirectUrl:', redirectUrl);
+    return { success: false, error: e.message, redirectUrl, phase };
   }
 }
 

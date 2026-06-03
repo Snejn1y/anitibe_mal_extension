@@ -16,6 +16,8 @@ export interface Strings {
   loading: string;
   features: string[];
   errGeneric: string;
+  errAuthFailed: string;
+  errAuthRedirectHint: string;
   login: string;
   loginInProgress: string;
   connected: string;
@@ -85,6 +87,8 @@ const uk: Strings = {
     'Ручний пошук аніме',
   ],
   errGeneric: 'Щось пішло не так',
+  errAuthFailed: 'Не вдалося відкрити сторінку авторизації MyAnimeList.',
+  errAuthRedirectHint: 'Перевір, що цей redirect URI додано в налаштуваннях MAL-додатку (apiconfig):',
   login: 'Увійти через MyAnimeList',
   loginInProgress: 'Відкриваємо MAL...',
   connected: 'підключено до MAL',
@@ -148,6 +152,8 @@ const en: Strings = {
     'Manual anime search',
   ],
   errGeneric: 'Something went wrong',
+  errAuthFailed: 'Could not open the MyAnimeList authorization page.',
+  errAuthRedirectHint: 'Make sure this redirect URI is registered in your MAL app (apiconfig):',
   login: 'Sign in with MyAnimeList',
   loginInProgress: 'Opening MAL...',
   connected: 'connected to MAL',
