@@ -15,6 +15,13 @@ let pendingAuth: PendingAuth | null = null;
 
 async function doOAuth(): Promise<{ success: boolean; error?: string }> {
   try {
+    if (pendingAuth) {
+      const prev = pendingAuth;
+      pendingAuth = null;
+      prev.cleanup();
+      prev.resolve({ success: false, error: 'Login superseded by a new attempt' });
+    }
+
     const verifier = generateVerifier();
     const state = generateState();
     await codeVerifier.setValue(verifier);
@@ -58,33 +65,45 @@ async function doOAuth(): Promise<{ success: boolean; error?: string }> {
   }
 }
 
-async function handleOAuthCallback(msg: { code?: string; state?: string; error?: string }): Promise<void> {
-  if (!pendingAuth) {
-    console.warn('[BG][OAuth] Callback received with no pending auth — ignoring');
+async function handleOAuthCallback(
+  msg: { code?: string; state?: string; error?: string },
+  senderTabId?: number,
+): Promise<void> {
+  const closeTab = () => {
+    if (senderTabId !== undefined) browser.tabs.remove(senderTabId).catch(() => {});
+  };
+  // Resolve the in-memory login promise if this worker still holds one. After an
+  // MV3 service-worker restart pendingAuth is null — the token exchange below still
+  // completes, and the popup learns it succeeded via getAuthStatus on next open.
+  const resolveLogin = (r: { success: boolean; error?: string }) => {
+    if (pendingAuth) {
+      const p = pendingAuth;
+      pendingAuth = null;
+      p.cleanup();
+      p.resolve(r);
+    }
+  };
+
+  // Provider-reported error (e.g. the user denied consent): abort the flow. Handled
+  // before the state check because error redirects may omit the state parameter.
+  if (msg.error) {
+    console.error('[BG][OAuth] Provider returned error:', msg.error);
+    await oauthState.setValue('');
+    closeTab();
+    resolveLogin({ success: false, error: msg.error });
     return;
   }
+
+  // CSRF: validate against the persisted state so the check survives worker restarts.
   const expectedState = await oauthState.getValue();
-  if (msg.state !== expectedState || msg.state !== pendingAuth.state) {
+  if (!expectedState || msg.state !== expectedState) {
     console.warn('[BG][OAuth] State mismatch — ignoring callback');
     return;
   }
 
-  const p = pendingAuth;
-  pendingAuth = null;
-  p.cleanup();
-
-  const finish = (r: { success: boolean; error?: string }) => {
-    if (p.tabId !== undefined) browser.tabs.remove(p.tabId).catch(() => {});
-    p.resolve(r);
-  };
-
-  if (msg.error) {
-    console.error('[BG][OAuth] Provider returned error:', msg.error);
-    finish({ success: false, error: msg.error });
-    return;
-  }
   if (!msg.code) {
-    finish({ success: false, error: 'No code in callback' });
+    closeTab();
+    resolveLogin({ success: false, error: 'No code in callback' });
     return;
   }
 
@@ -117,10 +136,12 @@ async function handleOAuthCallback(msg: { code?: string; state?: string; error?:
     await oauthState.setValue('');
 
     console.log('[BG][OAuth] Login successful');
-    finish({ success: true });
+    closeTab();
+    resolveLogin({ success: true });
   } catch (e: any) {
     console.error('[BG][OAuth] Token exchange error:', e.message);
-    finish({ success: false, error: e.message });
+    closeTab();
+    resolveLogin({ success: false, error: e.message });
   }
 }
 
@@ -212,7 +233,7 @@ export default defineBackground(() => {
     }
     if (action === 'oauthCallback') {
       const { code, state, error } = message;
-      handleOAuthCallback({ code, state, error }).then(() => sendResponse({ success: true }));
+      handleOAuthCallback({ code, state, error }, _sender?.tab?.id).then(() => sendResponse({ success: true }));
       return true;
     }
     if (action === 'logout') {
