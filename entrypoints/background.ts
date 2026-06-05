@@ -1,49 +1,102 @@
-import { MAL_AUTH_URL, MAL_TOKEN_URL, MAL_CLIENT_ID, MAL_CLIENT_SECRET } from '../utils/config';
-import { malToken, malRefresh, codeVerifier } from '../utils/storage';
-import { generateVerifier } from '../utils/oauth';
+import { MAL_AUTH_URL, MAL_TOKEN_URL, MAL_CLIENT_ID, MAL_CLIENT_SECRET, OAUTH_REDIRECT_URL } from '../utils/config';
+import { malToken, malRefresh, codeVerifier, oauthState } from '../utils/storage';
+import { generateVerifier, generateState } from '../utils/oauth';
 import { getMALUser, checkUserList, addToList, updateEpisode, completeAnime } from '../utils/mal-api';
 import { searchAnime, searchAnimeList } from '../utils/jikan';
 
-async function doOAuth(): Promise<{ success: boolean; error?: string; redirectUrl?: string; phase?: 'authorize' | 'token' }> {
-  // Computed up-front so it can be surfaced in error responses for debugging:
-  // this is the exact redirect URI that must be registered in the MAL app.
-  const redirectUrl = chrome.identity.getRedirectURL('provider_cb');
-  let phase: 'authorize' | 'token' = 'authorize';
+type PendingAuth = {
+  state: string;
+  resolve: (r: { success: boolean; error?: string }) => void;
+  tabId?: number;
+  cleanup: () => void;
+};
 
+let pendingAuth: PendingAuth | null = null;
+
+async function doOAuth(): Promise<{ success: boolean; error?: string }> {
   try {
     const verifier = generateVerifier();
+    const state = generateState();
     await codeVerifier.setValue(verifier);
-
-    console.log('[BG][OAuth] Redirect URL:', redirectUrl);
+    await oauthState.setValue(state);
 
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: MAL_CLIENT_ID,
-      redirect_uri: redirectUrl,
+      redirect_uri: OAUTH_REDIRECT_URL,
       code_challenge: verifier,
       code_challenge_method: 'plain',
+      state,
     });
 
     const authUrl = `${MAL_AUTH_URL}?${params}`;
-    const resultUrl = await chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true });
+    console.log('[BG][OAuth] Opening auth tab; redirect_uri:', OAUTH_REDIRECT_URL);
 
-    if (!resultUrl) throw new Error('Auth flow returned no URL');
+    const tab = await browser.tabs.create({ url: authUrl });
 
-    // We got a redirect back, so the authorize step succeeded — any failure
-    // beyond this point is in the token exchange, not a redirect_uri mismatch.
-    phase = 'token';
-    const url = new URL(resultUrl);
-    const code = url.searchParams.get('code');
-    if (!code) throw new Error('No code in redirect URL');
+    return await new Promise<{ success: boolean; error?: string }>((resolve) => {
+      const onRemoved = (closedId: number) => {
+        if (pendingAuth && closedId === pendingAuth.tabId) {
+          const p = pendingAuth;
+          pendingAuth = null;
+          p.cleanup();
+          p.resolve({ success: false, error: 'Authorization cancelled' });
+        }
+      };
+      browser.tabs.onRemoved.addListener(onRemoved);
 
-    const storedVerifier = await codeVerifier.getValue();
+      pendingAuth = {
+        state,
+        resolve,
+        tabId: tab.id,
+        cleanup: () => browser.tabs.onRemoved.removeListener(onRemoved),
+      };
+    });
+  } catch (e: any) {
+    console.error('[BG][OAuth] Error:', e.message);
+    return { success: false, error: e.message };
+  }
+}
+
+async function handleOAuthCallback(msg: { code?: string; state?: string; error?: string }): Promise<void> {
+  if (!pendingAuth) {
+    console.warn('[BG][OAuth] Callback received with no pending auth — ignoring');
+    return;
+  }
+  const expectedState = await oauthState.getValue();
+  if (msg.state !== expectedState || msg.state !== pendingAuth.state) {
+    console.warn('[BG][OAuth] State mismatch — ignoring callback');
+    return;
+  }
+
+  const p = pendingAuth;
+  pendingAuth = null;
+  p.cleanup();
+
+  const finish = (r: { success: boolean; error?: string }) => {
+    if (p.tabId !== undefined) browser.tabs.remove(p.tabId).catch(() => {});
+    p.resolve(r);
+  };
+
+  if (msg.error) {
+    console.error('[BG][OAuth] Provider returned error:', msg.error);
+    finish({ success: false, error: msg.error });
+    return;
+  }
+  if (!msg.code) {
+    finish({ success: false, error: 'No code in callback' });
+    return;
+  }
+
+  try {
+    const verifier = await codeVerifier.getValue();
     const body = new URLSearchParams({
       client_id: MAL_CLIENT_ID,
       client_secret: MAL_CLIENT_SECRET,
       grant_type: 'authorization_code',
-      code,
-      redirect_uri: redirectUrl,
-      code_verifier: storedVerifier,
+      code: msg.code,
+      redirect_uri: OAUTH_REDIRECT_URL,
+      code_verifier: verifier,
     });
 
     const tokenRes = await fetch(MAL_TOKEN_URL, {
@@ -61,12 +114,13 @@ async function doOAuth(): Promise<{ success: boolean; error?: string; redirectUr
     await malToken.setValue(tokens.access_token);
     await malRefresh.setValue(tokens.refresh_token);
     await codeVerifier.setValue('');
+    await oauthState.setValue('');
 
     console.log('[BG][OAuth] Login successful');
-    return { success: true };
+    finish({ success: true });
   } catch (e: any) {
-    console.error('[BG][OAuth] Error:', e.message, '| phase:', phase, '| redirectUrl:', redirectUrl);
-    return { success: false, error: e.message, redirectUrl, phase };
+    console.error('[BG][OAuth] Token exchange error:', e.message);
+    finish({ success: false, error: e.message });
   }
 }
 
@@ -154,6 +208,11 @@ export default defineBackground(() => {
 
     if (action === 'login') {
       doOAuth().then(sendResponse);
+      return true;
+    }
+    if (action === 'oauthCallback') {
+      const { code, state, error } = message;
+      handleOAuthCallback({ code, state, error }).then(() => sendResponse({ success: true }));
       return true;
     }
     if (action === 'logout') {
