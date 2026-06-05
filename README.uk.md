@@ -86,9 +86,7 @@ npm run compile        # перевірка типів
 
 Ключі MAL **не** зберігаються в репозиторії — вони беруться з `.env` під час збірки.
 Зареєструйте застосунок на [MAL API](https://myanimelist.net/apiconfig) і додайте
-`WXT_MAL_CLIENT_ID` та `WXT_MAL_CLIENT_SECRET` у `.env`. Redirect URI застосунку має
-збігатися з тим, що повертає `chrome.identity.getRedirectURL('provider_cb')` для вашої
-збірки. Авторизація — OAuth2 + PKCE (MAL вимагає client secret для обміну токена).
+`WXT_MAL_CLIENT_ID` та `WXT_MAL_CLIENT_SECRET` у `.env`. Redirect URI застосунку має бути `https://snejn1y.github.io/anitibe_mal_extension/oauth/` (власна callback-сторінка розширення). Той самий URI використовують і Chrome-, і Firefox-збірки. Авторизація — OAuth2 + PKCE (MAL вимагає client secret для обміну токена).
 
 ## Дозволи та приватність
 
