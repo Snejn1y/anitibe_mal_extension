@@ -93,7 +93,6 @@ Auth uses OAuth2 + PKCE (MAL requires the client secret for the token exchange).
 ## Permissions & privacy
 
 - `storage` — keeps your MAL token and settings (language).
-- `identity` — runs the MyAnimeList OAuth sign-in flow.
 - Host access to `anitube.in.ua` (read the page), `myanimelist.net` / `api.myanimelist.net`
   (your list), and the Jikan API (anonymous anime lookups).
 

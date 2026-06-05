@@ -91,7 +91,6 @@ npm run compile        # перевірка типів
 ## Дозволи та приватність
 
 - `storage` — зберігає ваш MAL-токен і налаштування (мову).
-- `identity` — запускає вхід через MyAnimeList (OAuth).
 - Доступ до `anitube.in.ua` (читання сторінки), `myanimelist.net` / `api.myanimelist.net`
   (ваш список) і Jikan API (анонімні запити даних аніме).
 
