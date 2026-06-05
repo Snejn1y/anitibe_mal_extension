@@ -8,6 +8,11 @@ export const MAL_AUTH_URL = 'https://myanimelist.net/v1/oauth2/authorize';
 export const MAL_TOKEN_URL = 'https://myanimelist.net/v1/oauth2/token';
 export const MAL_API_URL = 'https://api.myanimelist.net/v2';
 
+// Fixed, self-hosted OAuth callback page. After MAL authorization both Chrome and
+// Firefox land here; a content script on this page relays the code to the background.
+// This is the SINGLE redirect URI that must be registered in the MAL app.
+export const OAUTH_REDIRECT_URL = 'https://snejn1y.github.io/anitibe_mal_extension/oauth/';
+
 // TODO: замінити на реальний репозиторій, коли він зʼявиться.
 export const REPO_URL = 'https://github.com/Snejn1y/anitibe_mal_extension';
 export const BUG_REPORT_URL = `${REPO_URL}/issues/new`;
