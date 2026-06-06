@@ -87,14 +87,12 @@ The built extension lands in `.output/chrome-mv3/` — load it via
 
 MAL credentials are **not** committed — they are injected at build time from `.env`.
 Register an app at [MAL API](https://myanimelist.net/apiconfig) and set
-`WXT_MAL_CLIENT_ID` and `WXT_MAL_CLIENT_SECRET` in your `.env`. The app's redirect URI
-must match what `chrome.identity.getRedirectURL('provider_cb')` returns for your build.
+`WXT_MAL_CLIENT_ID` and `WXT_MAL_CLIENT_SECRET` in your `.env`. The app's redirect URI must be set to `https://snejn1y.github.io/anitibe_mal_extension/oauth/` (the extension's self-hosted OAuth callback page). The same URI is used by both the Chrome and Firefox builds.
 Auth uses OAuth2 + PKCE (MAL requires the client secret for the token exchange).
 
 ## Permissions & privacy
 
 - `storage` — keeps your MAL token and settings (language).
-- `identity` — runs the MyAnimeList OAuth sign-in flow.
 - Host access to `anitube.in.ua` (read the page), `myanimelist.net` / `api.myanimelist.net`
   (your list), and the Jikan API (anonymous anime lookups).
 

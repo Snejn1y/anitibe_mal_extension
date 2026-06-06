@@ -26,5 +26,6 @@ function sessionItem<T>(key: string, defaultValue: T): StorageItem<T> {
 export const malToken = syncItem<string>('malToken', '');
 export const malRefresh = syncItem<string>('malRefresh', '');
 export const codeVerifier = sessionItem<string>('codeVerifier', '');
+export const oauthState = sessionItem<string>('oauthState', '');
 // '' = not chosen yet → auto-detect from browser locale.
 export const langPref = syncItem<string>('lang', '');
