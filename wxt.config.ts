@@ -17,6 +17,11 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         id: 'anitube-mal-sync@users.noreply.github.com',
+        // Required by AMO: declare the data the add-on transmits. Watch progress
+        // (anime/episodes/scores) is synced to the user's MyAnimeList account.
+        data_collection_permissions: {
+          required: ['websiteActivity'],
+        },
       },
     },
     host_permissions: [
